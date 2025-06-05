@@ -1,9 +1,7 @@
 from fastapi import APIRouter
 
 
-router = APIRouter(
-    tags=["Classification"]
-)
+router = APIRouter()
 
 
 @router.get("/")
