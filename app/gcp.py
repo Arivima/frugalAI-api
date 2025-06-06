@@ -1,5 +1,3 @@
-import re
-import json
 import logging
 from google.cloud import storage
 from app.config import Config, setup_logging
