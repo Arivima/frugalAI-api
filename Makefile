@@ -1,6 +1,6 @@
 fastapi-dev : 
-	uv run fastapi dev app/main.py
-# uv run uvicorn app.main:app --reload
+	UV_ENV_FILE=".env" uv run uvicorn app.main:app --reload
+#	uv run fastapi dev app/main.py
 
 module-dev:
 	UV_ENV_FILE=".env" uv run python -m app.gcp

@@ -9,10 +9,12 @@ router = APIRouter()
 
 
 class ClassifyRequest(BaseModel):
-    claim: str = Field(..., min_length=1)
+    user_claim: str = Field(..., strip_whitespace=True, min_length=1)
 
 class ClassifyResponse(BaseModel):
-    classification: str
+    model_name: str
+    user_claim: str
+    claim_category: str
 
 
 @router.get("/")
@@ -32,9 +34,15 @@ async def classify(request: Request, body: ClassifyRequest):
     logger.info(f"Model available")
 
     try:
-        output = llm.generate(prompt=body.claim)
+        output = llm.generate(prompt=body.user_claim)
     except Exception as e:
         logger.error(f"Error during generation: {e}")
         raise HTTPException(status_code=500, detail=f"Error during generation: {e}")
 
-    return ClassifyResponse(classification=output)
+    response_data = {
+        "model_name":    llm.model_name,
+        "user_claim":    body.user_claim,
+        "claim_category": output
+    }
+    logger.info(f"response: {response_data}")
+    return ClassifyResponse(**response_data)

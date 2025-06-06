@@ -46,12 +46,12 @@ def load_model_gcs():
                 logger.info("Downloaded %s.", destination_directory + '/' + name)
 
 
-        logger.info("✅ Adapter loaded successfully from GCS.")
+        logger.info("✅ Adapter downloaded successfully from GCS.")
 
         return destination_directory
 
     except Exception as e:
-        logger.exception(f"❌ Error loading model from GCS bucket: {e}. Will try to load from cache.")
+        logger.exception(f"❌ Error downloading adapter from GCS: {e}. Will try to load from cache.")
 
 
 
