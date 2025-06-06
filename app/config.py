@@ -5,6 +5,9 @@ import logging
 class Config:
     GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "")
     GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "")
+    DESTINATION_DIRECTORY = os.getenv("DESTINATION_DIRECTORY", "")
+    ADAPTER_NAME = os.getenv("ADAPTER_NAME", "")
+    MODEL_NAME = os.getenv("MODEL_NAME", "")
 
 
 def setup_logging():

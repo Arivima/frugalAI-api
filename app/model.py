@@ -2,19 +2,17 @@ import torch
 import logging
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
-from app.config import setup_logging
+from app.config import setup_logging, Config
 
 logger = logging.getLogger(__name__)
 
 
 class LLMWrapper:
 
-    def __init__(
-        self,
-        adapter_dir: str = "models/model_KD_student_CE:v11",
-        base_model_name: str = "Qwen/Qwen2.5-1.5B-Instruct",
-    ):
-        logger.info(f"LLMWrapper.__init__ | Loading model and tokenizer")
+    def __init__(self):
+        logger.info(f"LLMWrapper.__init__ : Loading model and tokenizer")
+        adapter_dir = Config.DESTINATION_DIRECTORY + '/' + Config.ADAPTER_NAME
+        base_model_name = Config.MODEL_NAME
         logger.info(f"Base model: {base_model_name}")
         logger.info(f"Adapter directory: {adapter_dir}")
 
@@ -60,10 +58,24 @@ class LLMWrapper:
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         output_ids = self.model.generate(**inputs, max_new_tokens=max_new_tokens)
         output_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
-        
+
         logger.info(f"output_text {output_text}")
 
         return output_text
+
+
+    def clear(self):
+        try:
+            del self.model
+            del self.tokenizer
+
+            if self.device == "cuda":
+                torch.cuda.empty_cache()
+            elif self.device == "mps":
+                torch.mps.empty_cache()
+
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
