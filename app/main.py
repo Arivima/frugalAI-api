@@ -1,8 +1,3 @@
-# TODO V1
-# - tests
-# - input validation
-
-
 import logging
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
@@ -11,7 +6,7 @@ from app.config import setup_logging
 from app.gcp import load_model_gcs
 from app.model import LLMWrapper
 
-
+setup_logging()
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
@@ -34,9 +29,3 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 setup_logging()
 app.include_router(router)
-
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

@@ -14,7 +14,8 @@ class ClassifyRequest(BaseModel):
 class ClassifyResponse(BaseModel):
     model_name: str
     user_claim: str
-    claim_category: str
+    category: str
+    explanation : str
 
 
 @router.get("/")
@@ -34,15 +35,16 @@ async def classify(request: Request, body: ClassifyRequest):
     logger.info(f"Model available")
 
     try:
-        output = llm.generate(prompt=body.user_claim)
+        category, explanation = llm.generate(quote=body.user_claim)
     except Exception as e:
         logger.error(f"Error during generation: {e}")
         raise HTTPException(status_code=500, detail=f"Error during generation: {e}")
 
     response_data = {
-        "model_name":    llm.model_name,
-        "user_claim":    body.user_claim,
-        "claim_category": output
+        "model_name":   llm.model_name,
+        "user_claim":   body.user_claim,
+        "category":     category,
+        "explanation":  explanation
     }
     logger.info(f"response: {response_data}")
     return ClassifyResponse(**response_data)

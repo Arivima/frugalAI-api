@@ -1,5 +1,6 @@
 import torch
 import logging
+import re
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 from app.config import setup_logging, Config
@@ -50,23 +51,81 @@ class LLMWrapper:
 
     def generate(
         self,
-        prompt: str = "Who are you?",
-        max_new_tokens: int = 128,
+        quote: str = "Who are you?",
+        max_new_tokens: int = 2048,
     ):
+        
+        # from codecarbon import EmissionsTracker
+
+        # tracker = EmissionsTracker(
+        #     measure_power_secs=2,  # we track more frequently than default value (15)
+        #     log_level="error"      # we only display error level logs in this notebook
+        #     )
+
         assert self.model is not None
 
         logger.info(f"LLMWrapper.generate")
-        logger.info(f"prompt : {prompt}")
+        logger.info(f"quote : {quote}")
 
         self.model.eval()
 
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+        import textwrap
+
+        STUDENT_SYSTEM_MSG = textwrap.dedent("""\
+            You are a climate statement classifier.
+            Your task is to categorize statements by identifying which type of climate narrative they represent.
+
+            ### Categories:
+            0 - Not relevant: No climate-related claims or doesn't fit other categories
+            1 - Denial: Claims climate change is not happening
+            2 - Attribution denial: Claims human activity is not causing climate change
+            3 - Impact minimization: Claims climate change impacts are minimal or beneficial
+            4 - Solution opposition: Claims solutions to climate change are harmful
+            5 - Science skepticism: Challenges climate science validity or methods
+            6 - Actor criticism: Attacks credibility of climate scientists or activists
+            7 - Fossil fuel promotion: Asserts importance of fossil fuels
+            """).strip()
+
+        STUDENT_USER_TEMPLATE = textwrap.dedent("""\
+            Classify the following statement into one category (0-7).
+            ### Statement to classify:
+            {quote}
+            ### Answer:
+            Category:
+            """).strip()
+
+        messages = [
+            {"role": "system", "content": STUDENT_SYSTEM_MSG},
+            {"role": "user", "content": STUDENT_USER_TEMPLATE.format(quote=quote)},
+        ]
+
+        formatted_prompt = self.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+
+        inputs = self.tokenizer(formatted_prompt, return_tensors="pt").to(self.device)
+
         output_ids = self.model.generate(**inputs, max_new_tokens=max_new_tokens)
+
         output_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
-        logger.info(f"output_text {output_text}")
+        answer = output_text.split('assistant')[1]
 
-        return output_text
+        logger.info(f"answer: {answer}")
+
+        m = re.search(r"\d", answer)
+        if m:
+            category = m.group(0)
+            explanation = answer.split(category)[1].strip()
+        else:
+            category = ''
+            explanation = answer
+        logger.info(f"category: {category}")
+        logger.info(f"explanation: {explanation}")
+
+        return category, explanation
 
 
     def clear(self):
