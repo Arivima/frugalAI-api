@@ -1,7 +1,13 @@
 import logging
-from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel, Field
-
+from fastapi import (
+    APIRouter, 
+    Request, 
+    Response,
+    HTTPException, 
+    status
+    )
+from app.gcp import send_feedback_bq
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +22,11 @@ class ClassifyResponse(BaseModel):
     user_claim: str
     category: str
     explanation : str
+
+class FeedbackRequest(BaseModel):
+    user_claim: str = Field(..., strip_whitespace=True, min_length=1)
+    predicted_category: str
+    correct_category: str
 
 
 @router.get("/")
@@ -48,3 +59,21 @@ async def classify(request: Request, body: ClassifyRequest):
     }
     logger.info(f"response: {response_data}")
     return ClassifyResponse(**response_data)
+
+
+@router.post("/feedback", status_code=status.HTTP_204_NO_CONTENT)
+async def submit_feedback(request: Request, body: FeedbackRequest):
+
+    logger.info("New feedback request")
+    logger.info(f'user_claim {body.user_claim}')
+    logger.info(f'predicted category {body.predicted_category}')
+    logger.info(f'correct category {body.correct_category}')
+
+    send_feedback_bq(
+        user_claim=body.user_claim,
+        predicted_category=int(body.predicted_category),
+        correct_category=int(body.correct_category)
+        )
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
