@@ -78,7 +78,7 @@ def send_feedback_bq(
             raise ValueError("BQ_DATASET_ID is not configured in Config.")
 
         table_id = Config.BQ_TABLE_ID
-        if not dataset_id:
+        if not table_id:
             raise ValueError("BQ_TABLE_ID is not configured in Config.")
 
         table_ref = client.dataset(dataset_id).table(table_id)

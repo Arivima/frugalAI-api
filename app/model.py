@@ -55,13 +55,6 @@ class LLMWrapper:
         max_new_tokens: int = 2048,
     ):
         
-        # from codecarbon import EmissionsTracker
-
-        # tracker = EmissionsTracker(
-        #     measure_power_secs=2,  # we track more frequently than default value (15)
-        #     log_level="error"      # we only display error level logs in this notebook
-        #     )
-
         assert self.model is not None
 
         logger.info(f"LLMWrapper.generate : {quote}")
