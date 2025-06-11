@@ -6,6 +6,7 @@ from google.cloud.exceptions import GoogleCloudError
 from google.cloud import bigquery
 from datetime import datetime, timezone
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -65,37 +66,41 @@ def send_feedback_bq(
         correct_category: int = None
         ):
     try:
+        
         project_id = Config.GCP_PROJECT_ID
         if not project_id:
             raise ValueError("GCP_PROJECT_ID is not configured in Config.")
-        client = bigquery.Client(project=project_id)
-        logger.info('connected to client : %s', client.project)
-        
-        table_id = Config.BQ_TABLE_ID
+
+        client = bigquery.Client(project=project_id)        
+
         dataset_id = Config.BQ_DATASET_ID
+        if not dataset_id:
+            raise ValueError("BQ_DATASET_ID is not configured in Config.")
+
+        table_id = Config.BQ_TABLE_ID
+        if not dataset_id:
+            raise ValueError("BQ_TABLE_ID is not configured in Config.")
+
         table_ref = client.dataset(dataset_id).table(table_id)
-        logger.info('table_ref : %s', table_ref)
+
         table = client.get_table(table_ref)
-        logger.info('table : %s', table)
+
+        logger.info('BigQuery table : %s', table)
         
         row_data = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "user_claim": user_claim,
             "predicted_category": predicted_category,
             "correct_category": correct_category,
         }
-        logger.info(row_data.timestamp)
-        logger.info(row_data.user_claim)
-        logger.info(row_data.predicted_category)
-        logger.info(row_data.correct_category)
 
         errors = client.insert_rows_json(table, [row_data])
         
         if errors:
-            logger.error(f"Failed to insert feedback into BigQuery: {errors}")
+            logger.error(f"BigQuery insertion failed: {errors}")
             raise Exception(f"BigQuery insertion failed: {errors}")
         
-        logger.info(f"Successfully inserted feedback into BigQuery for claim: {user_claim[:50]}...")
+        logger.info(f"BigQuery insertion succeeded : {row_data}")
         
     except GoogleCloudError as e:
         logger.error(f"Google Cloud error while inserting feedback: {e}")
@@ -107,7 +112,12 @@ def send_feedback_bq(
 
 
 if __name__ == '__main__':
+
     setup_logging()
 
-    load_model_gcs()
-
+    # load_model_gcs()
+    send_feedback_bq(
+        user_claim='Climate change is cool',
+        predicted_category=3,
+        correct_category=2
+        )
