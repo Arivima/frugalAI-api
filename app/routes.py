@@ -25,8 +25,8 @@ class ClassifyResponse(BaseModel):
 
 class FeedbackRequest(BaseModel):
     user_claim: str = Field(..., strip_whitespace=True, min_length=1)
-    predicted_category: str
-    correct_category: str
+    predicted_category: int = Field(..., ge=0, le=7)
+    correct_category: int = Field(..., ge=0, le=7)
 
 
 @router.get("/")
@@ -37,7 +37,7 @@ async def root():
 @router.post("/classify", response_model=ClassifyResponse)
 async def classify(request: Request, body: ClassifyRequest):
 
-    logger.info("New request")
+    logger.info(f"New classification request : {body}")
 
     llm = getattr(request.app.state, "model", None)
     if llm is None:
@@ -64,10 +64,7 @@ async def classify(request: Request, body: ClassifyRequest):
 @router.post("/feedback", status_code=status.HTTP_204_NO_CONTENT)
 async def submit_feedback(request: Request, body: FeedbackRequest):
 
-    logger.info("New feedback request")
-    logger.info(f'user_claim {body.user_claim}')
-    logger.info(f'predicted category {body.predicted_category}')
-    logger.info(f'correct category {body.correct_category}')
+    logger.info(f"New feedback request : {body}")
 
     send_feedback_bq(
         user_claim=body.user_claim,

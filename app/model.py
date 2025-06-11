@@ -64,8 +64,7 @@ class LLMWrapper:
 
         assert self.model is not None
 
-        logger.info(f"LLMWrapper.generate")
-        logger.info(f"quote : {quote}")
+        logger.info(f"LLMWrapper.generate : {quote}")
 
         self.model.eval()
 
@@ -112,8 +111,6 @@ class LLMWrapper:
         output_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
         answer = output_text.split('assistant')[1]
-
-        logger.info(f"answer: {answer}")
 
         m = re.search(r"\d", answer)
         if m:
