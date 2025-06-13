@@ -26,6 +26,7 @@ class ClassifyResponse(BaseModel):
 class FeedbackRequest(BaseModel):
     user_claim: str = Field(..., strip_whitespace=True, min_length=1)
     predicted_category: int = Field(..., ge=0, le=7)
+    assistant_explanation: str = Field(..., strip_whitespace=True, min_length=1)
     correct_category: int = Field(..., ge=0, le=7)
 
 
@@ -69,6 +70,7 @@ async def submit_feedback(request: Request, body: FeedbackRequest):
     send_feedback_bq(
         user_claim=body.user_claim,
         predicted_category=int(body.predicted_category),
+        assistant_explanation=body.assistant_explanation,
         correct_category=int(body.correct_category)
         )
 

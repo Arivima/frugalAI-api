@@ -63,6 +63,7 @@ def load_model_gcs():
 def send_feedback_bq(
         user_claim: str, 
         predicted_category: int, 
+        assistant_explanation: str, 
         correct_category: int = None
         ):
     try:
@@ -87,11 +88,14 @@ def send_feedback_bq(
 
         logger.info('BigQuery table : %s', table)
         
+
+        # USE SCHEMA VALIDATION
         row_data = {
             "created_at": datetime.now(timezone.utc).isoformat(),
             "user_claim": user_claim,
             "predicted_category": predicted_category,
             "correct_category": correct_category,
+            "assistant_explanation": assistant_explanation,
         }
 
         errors = client.insert_rows_json(table, [row_data])
@@ -119,5 +123,6 @@ if __name__ == '__main__':
     send_feedback_bq(
         user_claim='Climate change is cool',
         predicted_category=3,
+        assistant_explanation='Refers to blablabla',
         correct_category=2
         )
